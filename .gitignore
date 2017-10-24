@@ -1,0 +1,9 @@
+ms_hybrid
+ms_mpi_dynamic
+ms_mpi_static
+ms_omp
+ms_seq
+out.png
+ref.png
+out40.png
+ref40.png

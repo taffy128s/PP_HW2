@@ -68,6 +68,7 @@ int main(int argc, char** argv) {
     int rank, size;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
+    omp_set_num_threads(num_threads);
     
     if (size == 1) {
         int* image = new int[width * height * sizeof(int)];

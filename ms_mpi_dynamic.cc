@@ -85,10 +85,21 @@ int main(int argc, char** argv) {
             MPI_Status stat;
             int *image = new int[width * height * sizeof(int)], *temp = new int[width];
             int count = 0, now_height = 0;
-            for (int i = 1; i < size; i++) {
-                MPI_Send(&now_height, 1, MPI_INT, i, data_tag, MPI_COMM_WORLD);
-                count++;
-                now_height++;
+            if (size - 1 > height) {
+                for (int i = 1; i < height + 1; i++) {
+                    MPI_Send(&now_height, 1, MPI_INT, i, data_tag, MPI_COMM_WORLD);
+                    count++;
+                    now_height++;
+                }
+                for (int i = height + 1; i < size; i++) {
+                    MPI_Send(&now_height, 1, MPI_INT, i, termination_tag, MPI_COMM_WORLD);
+                }
+            } else {
+                for (int i = 1; i < size; i++) {
+                    MPI_Send(&now_height, 1, MPI_INT, i, data_tag, MPI_COMM_WORLD);
+                    count++;
+                    now_height++;
+                }
             }
             while (count > 0) {
                 MPI_Recv(temp, width, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &stat);

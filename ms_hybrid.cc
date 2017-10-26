@@ -65,6 +65,8 @@ int main(int argc, char** argv) {
     int height = strtol(argv[7], 0, 10);
     const char* filename = argv[8];
     
+    clock_t begin, end;
+    double computation_time = 0, communication_time = 0;
     int rank, size;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -73,6 +75,7 @@ int main(int argc, char** argv) {
     if (size == 1) {
         int* image = new int[width * height * sizeof(int)];
         assert(image);
+#pragma omp parallel for schedule(dynamic, 1)
         for (int j = 0; j < height; ++j) {
             double y0 = j * ((upper - lower) / height) + lower;
             for (int i = 0; i < width; ++i) {
@@ -88,19 +91,31 @@ int main(int argc, char** argv) {
             int *image = new int[width * height * sizeof(int)], *temp = new int[width];
             int count = 0, now_height = 0;
             for (int i = 1; i < size; i++) {
+                begin = clock();
                 MPI_Send(&now_height, 1, MPI_INT, i, data_tag, MPI_COMM_WORLD);
+                end = clock();
+                communication_time += (double)(end - begin) / CLOCKS_PER_SEC;
                 count++;
                 now_height++;
             }
             while (count > 0) {
+                begin = clock();
                 MPI_Recv(temp, width, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &stat);
+                end = clock();
+                communication_time += (double)(end - begin) / CLOCKS_PER_SEC;
                 count--;
                 if (now_height < height) {
+                    begin = clock();
                     MPI_Send(&now_height, 1, MPI_INT, stat.MPI_SOURCE, data_tag, MPI_COMM_WORLD);
+                    end = clock();
+                    communication_time += (double)(end - begin) / CLOCKS_PER_SEC;
                     count++;
                     now_height++;
                 } else {
+                    begin = clock();
                     MPI_Send(&now_height, 1, MPI_INT, stat.MPI_SOURCE, termination_tag, MPI_COMM_WORLD);
+                    end = clock();
+                    communication_time += (double)(end - begin) / CLOCKS_PER_SEC;
                 }
                 memcpy(image + stat.MPI_TAG * width, temp, width * sizeof(int));
             }
@@ -110,19 +125,29 @@ int main(int argc, char** argv) {
         } else {
             int now_height, *data = new int[width];
             MPI_Status stat;
+            begin = clock();
             MPI_Recv(&now_height, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &stat);
+            end = clock();
+            communication_time += (double)(end - begin) / CLOCKS_PER_SEC;
             while (stat.MPI_TAG == data_tag) {
                 double y0 = now_height * ((upper - lower) / height) + lower;
+                begin = clock();
 #pragma omp parallel for schedule(dynamic, 1)
                 for (int i = 0; i < width; i++) {
                     double x0 = i * ((right - left) / width) + left;
                     data[i] = calc(y0, x0);
                 }
+                end = clock();
+                computation_time += (double)(end - begin) / CLOCKS_PER_SEC / num_threads;
+                begin = clock();
                 MPI_Send(data, width, MPI_INT, 0, now_height, MPI_COMM_WORLD);
                 MPI_Recv(&now_height, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &stat);
+                end = clock();
+                communication_time += (double)(end - begin) / CLOCKS_PER_SEC;
             }
             delete[] data;
         }
     }
+    printf("rank: %d, computation time: %.1f, communication time: %.1f\n", rank, computation_time, communication_time);
     MPI_Finalize();
 }

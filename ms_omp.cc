@@ -61,10 +61,13 @@ int main(int argc, char** argv) {
     int height = strtol(argv[7], 0, 10);
     const char* filename = argv[8];
 
+    clock_t begin, end;
+    double computation_time = 0, communication_time = 0;
     int* image = new int[width * height * sizeof(int)];
     assert(image);
     omp_set_num_threads(num_threads);
 
+    begin = clock();
 #pragma omp parallel for schedule(dynamic, 1)
     for (int j = 0; j < height; ++j) {
         double y0 = j * ((upper - lower) / height) + lower;
@@ -73,6 +76,9 @@ int main(int argc, char** argv) {
             image[j * width + i] = calc(y0, x0);
         }
     }
+    end = clock();
+    computation_time += (double)(end - begin) / CLOCKS_PER_SEC / num_threads;
+    printf("computation time: %.1f, communication time: %.1f\n", computation_time, communication_time);
     write_png(filename, width, height, image);
     delete[] image;
 }

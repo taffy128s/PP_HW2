@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
     int height = strtol(argv[7], 0, 10);
     const char* filename = argv[8];
 
-    int* image = new int[width * height * sizeof(int)];
+    int* image = new int[width * height];
     assert(image);
     omp_set_num_threads(num_threads);
 

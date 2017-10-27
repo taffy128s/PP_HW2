@@ -71,7 +71,7 @@ int main(int argc, char** argv) {
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     
     if (size == 1) {
-        int* image = new int[width * height * sizeof(int)];
+        int* image = new int[width * height];
         assert(image);
         for (int j = 0; j < height; ++j) {
             double y0 = j * ((upper - lower) / height) + lower;
@@ -85,7 +85,7 @@ int main(int argc, char** argv) {
     } else {
         if (rank == 0) {
             MPI_Status stat;
-            int *image = new int[width * height * sizeof(int)], *temp = new int[width];
+            int *image = new int[width * height], *temp = new int[width];
             int count = 0, now_height = 0;
             if (size - 1 > height) {
                 for (int i = 1; i < height + 1; i++) {

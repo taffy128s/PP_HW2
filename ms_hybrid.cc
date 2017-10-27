@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
     omp_set_num_threads(num_threads);
     
     if (size == 1) {
-        int* image = new int[width * height * sizeof(int)];
+        int* image = new int[width * height];
         assert(image);
 #pragma omp parallel for schedule(dynamic, 1)
         for (int j = 0; j < height; ++j) {
@@ -88,7 +88,7 @@ int main(int argc, char** argv) {
     } else {
         if (rank == 0) {
             MPI_Status stat;
-            int *image = new int[width * height * sizeof(int)], *temp = new int[width];
+            int *image = new int[width * height], *temp = new int[width];
             int count = 0, now_height = 0;
             if (size - 1 > height) {
                 for (int i = 1; i < height + 1; i++) {

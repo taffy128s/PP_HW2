@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     
     /* allocate memory for image */
-    int* image = new int[width * height * sizeof(int)];
+    int* image = new int[width * height];
     assert(image);
 
     int divided_height = height / size;

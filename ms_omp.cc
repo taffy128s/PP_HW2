@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
 
     clock_t begin, end;
     double computation_time = 0, communication_time = 0;
-    int* image = new int[width * height * sizeof(int)];
+    int* image = new int[width * height];
     assert(image);
     omp_set_num_threads(num_threads);
 
